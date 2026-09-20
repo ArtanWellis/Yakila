@@ -1,0 +1,21 @@
+{
+  "name": "@yakila/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@yakila/config": "workspace:*",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0"
+  }
+}

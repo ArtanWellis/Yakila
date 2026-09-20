@@ -1,0 +1,22 @@
+{
+  "name": "@yakila/validation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@yakila/config": "workspace:*",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "@yakila/types": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}

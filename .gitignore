@@ -1,0 +1,19 @@
+node_modules/
+.turbo/
+.next/
+.expo/
+dist/
+coverage/
+*.tsbuildinfo
+
+# env : ne jamais committer de secret, seul .env.example est versionné
+.env
+.env.*
+!.env.example
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+.DS_Store
+*.pem

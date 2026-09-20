@@ -1,0 +1,8 @@
+node_modules
+.next
+.expo
+.turbo
+dist
+pnpm-lock.yaml
+supabase/.temp
+packages/types/src/database.ts

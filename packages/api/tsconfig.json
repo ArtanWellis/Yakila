@@ -1,0 +1,4 @@
+{
+  "extends": "@yakila/config/tsconfig.base.json",
+  "include": ["src"]
+}
