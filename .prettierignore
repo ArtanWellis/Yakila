@@ -12,3 +12,5 @@ packages/types/src/database.ts
 AGENTS.md
 CLAUDE.md
 .claude/skills
+.agents
+skills-lock.json

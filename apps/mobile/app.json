@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "YaKiLa",
+    "slug": "yakila",
+    "scheme": "yakila",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,6 +21,27 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-secure-store", { "faceIDPermission": false }],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "YaKiLa utilise ta position pour te proposer des services et des missions près de chez toi. Les autres utilisateurs ne voient jamais ta position exacte, seulement une zone d'environ 1 km.",
+          "locationAlwaysAndWhenInUsePermission": "YaKiLa utilise ta position uniquement quand l'application est ouverte, pour te proposer des services et des missions près de chez toi.",
+          "locationAlwaysPermission": "YaKiLa utilise ta position uniquement quand l'application est ouverte, pour te proposer des services et des missions près de chez toi.",
+          "motionUsagePermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "YaKiLa accède à tes photos pour que tu puisses choisir ta photo de profil.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ]
   }
 }

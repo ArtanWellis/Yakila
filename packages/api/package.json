@@ -16,6 +16,8 @@
     "vitest": "^5.0.1"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.116.0"
+    "@supabase/supabase-js": "^2.116.0",
+    "@yakila/types": "workspace:*",
+    "@yakila/validation": "workspace:*"
   }
 }

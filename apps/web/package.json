@@ -11,6 +11,7 @@
     "test": "echo \"Pas encore de tests web\""
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
     "@yakila/api": "workspace:*",
     "@yakila/types": "workspace:*",
     "@yakila/utils": "workspace:*",
