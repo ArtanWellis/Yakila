@@ -6,3 +6,9 @@ dist
 pnpm-lock.yaml
 supabase/.temp
 packages/types/src/database.ts
+
+# Généré par GitNexus (bloc régénéré à chaque `analyze`)
+.gitnexus
+AGENTS.md
+CLAUDE.md
+.claude/skills
