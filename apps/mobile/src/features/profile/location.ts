@@ -2,7 +2,7 @@ import * as Location from "expo-location";
 import { clearProfileLocation, setProfileLocation } from "@yakila/api";
 import { coordinatesSchema } from "@yakila/validation";
 import { supabase } from "@/lib/supabase";
-import { withTimeout } from "@/lib/timeout";
+import { REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/timeout";
 
 /** Un premier fix peut être long à l'intérieur d'un bâtiment : au-delà, on abandonne. */
 const POSITION_TIMEOUT_MS = 15_000;
@@ -57,8 +57,9 @@ export async function saveMyApproximateLocation(
     let longitude: number;
     try {
       const position = await withTimeout(
-        // Précision « équilibrée » (~100 m) : suffisante, l'affichage public est de toute façon à ~1 km.
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        // Précision « basse » (~1 km) : la position publique est arrondie à ~1 km, inutile de
+        // demander plus fin (et moins de données de localisation collectées).
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
         POSITION_TIMEOUT_MS,
       );
       ({ latitude, longitude } = position.coords);
@@ -69,7 +70,10 @@ export async function saveMyApproximateLocation(
     const coordinates = coordinatesSchema.safeParse({ lat: latitude, lng: longitude });
     if (!coordinates.success) return { status: "unavailable" };
 
-    const { error } = await setProfileLocation(supabase, coordinates.data);
+    const { error } = await withTimeout(
+      setProfileLocation(supabase, coordinates.data),
+      REQUEST_TIMEOUT_MS,
+    );
     return error ? { status: "error" } : { status: "saved" };
   } catch {
     return { status: "error" };
@@ -79,7 +83,7 @@ export async function saveMyApproximateLocation(
 /** Efface la position, exacte et approximative. `true` si la suppression a réussi. */
 export async function removeMyLocation(): Promise<boolean> {
   try {
-    const { error } = await clearProfileLocation(supabase);
+    const { error } = await withTimeout(clearProfileLocation(supabase), REQUEST_TIMEOUT_MS);
     return error === null;
   } catch {
     return false;

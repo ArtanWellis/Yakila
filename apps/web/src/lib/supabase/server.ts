@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@yakila/types";
 import { cookies } from "next/headers";
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, SESSION_COOKIE_OPTIONS } from "./env";
 
 /**
  * Client Supabase serveur lié aux cookies de la requête (Server Components, Server Actions,
@@ -15,6 +15,7 @@ export async function createServerSupabaseClient() {
   const { url, anonKey } = getSupabaseEnv();
 
   return createServerClient<Database>(url, anonKey, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll(cookiesToSet) {

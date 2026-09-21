@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
+import { trustedAvatarUri } from "@/lib/avatar-url";
 import { colors } from "./theme";
 
 interface AvatarProps {
@@ -13,14 +14,16 @@ interface AvatarProps {
 export const Avatar = memo(function Avatar({ uri, name, size = 96 }: AvatarProps) {
   const [failedUri, setFailedUri] = useState<string | null>(null);
   const shape = { width: size, height: size, borderRadius: size / 2 };
+  // Une URL qui ne vient pas de notre bucket n'est jamais chargée : initiales à la place.
+  const trustedUri = trustedAvatarUri(uri);
 
-  if (uri !== null && failedUri !== uri) {
+  if (trustedUri !== null && failedUri !== trustedUri) {
     return (
       <Image
-        source={{ uri }}
+        source={{ uri: trustedUri }}
         style={[styles.image, shape]}
         accessibilityLabel={`Photo de profil de ${name}`}
-        onError={() => setFailedUri(uri)}
+        onError={() => setFailedUri(trustedUri)}
       />
     );
   }

@@ -30,11 +30,9 @@ function OwnProfile({ userId, email }: { userId: string; email: string | null })
 
   const signOut = async () => {
     setSigningOut(true);
-    try {
-      const { error } = await signOutFromThisDevice();
-      // Succès : SessionProvider passe à « déconnecté » et la navigation protégée renvoie vers la connexion.
-      if (error) throw error;
-    } catch {
+    // Succès : SessionProvider passe à « déconnecté » et la navigation protégée renvoie vers la
+    // connexion, cet écran disparaît. L'alerte n'apparaît que si l'appareil est resté connecté.
+    if (!(await signOutFromThisDevice())) {
       setSigningOut(false);
       Alert.alert("Déconnexion impossible", "Vérifie ta connexion internet et réessaie.");
     }

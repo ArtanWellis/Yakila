@@ -1,27 +1,14 @@
-const MIME_BY_EXTENSION: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-};
-
-interface PickedImage {
-  uri: string;
-  fileName?: string | null;
-  mimeType?: string | null;
-}
-
 /**
- * Type MIME d'une image choisie dans la galerie. `mimeType` peut manquer selon la plateforme : on se
- * rabat alors sur l'extension. Retourne `null` si rien ne permet de le savoir. La valeur n'est pas
- * filtrée ici : `avatarFileSchema` (@yakila/validation) décide des formats acceptés.
+ * Dimension à demander au manipulateur pour qu'un plus grand côté ne dépasse pas `maxSide`, en
+ * conservant les proportions (le côté non précisé est calculé par le manipulateur). `null` : rien à
+ * redimensionner, car l'image tient déjà (jamais d'agrandissement) ou ses dimensions sont inconnues.
  */
-export function resolveImageMimeType(image: PickedImage): string | null {
-  const declared = image.mimeType?.trim().toLowerCase();
-  if (declared) return declared === "image/jpg" ? "image/jpeg" : declared;
-
-  const name = (image.fileName ?? image.uri).split(/[?#]/)[0] ?? "";
-  const dot = name.lastIndexOf(".");
-  if (dot === -1) return null;
-  return MIME_BY_EXTENSION[name.slice(dot + 1).toLowerCase()] ?? null;
+export function resizeToFit(
+  width: number,
+  height: number,
+  maxSide: number,
+): { width: number } | { height: number } | null {
+  if (!(width > 0 && height > 0)) return null;
+  if (Math.max(width, height) <= maxSide) return null;
+  return width >= height ? { width: maxSide } : { height: maxSide };
 }

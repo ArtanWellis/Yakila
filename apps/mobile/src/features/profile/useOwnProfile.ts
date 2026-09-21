@@ -2,13 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { fetchProfile } from "@yakila/api";
 import type { Profile } from "@yakila/types";
 import { supabase } from "@/lib/supabase";
+import { REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/timeout";
 
 export type OwnProfileState =
   { status: "loading" } | { status: "error" } | { status: "ready"; profile: Profile };
 
 async function loadProfile(userId: string): Promise<Profile | null> {
   try {
-    const { data, error } = await fetchProfile(supabase, userId);
+    const { data, error } = await withTimeout(fetchProfile(supabase, userId), REQUEST_TIMEOUT_MS);
     return error ? null : data;
   } catch {
     return null;

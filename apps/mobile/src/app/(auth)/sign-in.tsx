@@ -8,7 +8,8 @@ import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
 import { colors, spacing } from "@/components/theme";
 import { signInWithPassword } from "@/features/auth/actions";
-import { describeSignInError } from "@/lib/auth-errors";
+import { ResendConfirmationEmail } from "@/features/auth/ResendConfirmationEmail";
+import { asErrorLike, describeSignInError, isEmailNotConfirmed } from "@/lib/auth-errors";
 import { fieldErrorsFromIssues, type FieldErrors } from "@/lib/form";
 
 const FIELDS = ["email", "password"] as const;
@@ -18,6 +19,8 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors<(typeof FIELDS)[number]>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  // Adresse à laquelle proposer de renvoyer l'e-mail de confirmation (erreur `email_not_confirmed`).
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const passwordInput = useRef<TextInput>(null);
 
@@ -38,8 +41,11 @@ export default function SignInScreen() {
       // l'utilisateur vers les onglets : aucune redirection à faire ici.
       const { error } = await signInWithPassword(parsed.data);
       if (error) setFormError(describeSignInError(error));
-    } catch {
-      setFormError(describeSignInError({ message: "" }));
+      setUnconfirmedEmail(error && isEmailNotConfirmed(error) ? parsed.data.email : null);
+    } catch (error) {
+      // Dont `TimeoutError` : le serveur n'a pas répondu dans le délai imparti.
+      setFormError(describeSignInError(asErrorLike(error)));
+      setUnconfirmedEmail(null);
     } finally {
       setSubmitting(false);
     }
@@ -55,7 +61,10 @@ export default function SignInScreen() {
       <TextField
         label="Adresse e-mail"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          setEmail(text);
+          setUnconfirmedEmail(null);
+        }}
         error={fieldErrors.email}
         keyboardType="email-address"
         autoCapitalize="none"
@@ -81,6 +90,7 @@ export default function SignInScreen() {
       />
 
       {formError !== null && <StatusMessage kind="error">{formError}</StatusMessage>}
+      {unconfirmedEmail !== null && <ResendConfirmationEmail email={unconfirmedEmail} />}
 
       <Button title="Se connecter" onPress={() => void submit()} loading={submitting} />
       <Button

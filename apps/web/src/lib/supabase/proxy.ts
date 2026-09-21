@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@yakila/types";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, SESSION_COOKIE_OPTIONS } from "./env";
 
 /**
  * Rafraîchit la session Supabase pour la requête en cours (appelé par `src/proxy.ts`).
@@ -19,6 +19,7 @@ export async function updateSession(request: NextRequest) {
   const state = { response: NextResponse.next({ request }) };
 
   const supabase = createServerClient<Database>(url, anonKey, {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(cookiesToSet, headers) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { BIO_MAX, CITY_MAX, DISPLAY_NAME_MAX } from "@yakila/validation";
 import { useActionState } from "react";
 import { primaryButton } from "@/components/button-styles";
 import { FormMessage, TextAreaField, TextField } from "@/components/form-fields";
@@ -25,7 +26,7 @@ export function ProfileForm({
         name="displayName"
         label="Nom affiché"
         autoComplete="nickname"
-        maxLength={50}
+        maxLength={DISPLAY_NAME_MAX}
         defaultValue={state.values?.displayName ?? displayName}
         error={state.errors?.displayName}
       />
@@ -34,9 +35,9 @@ export function ProfileForm({
         name="bio"
         label="À propos de toi"
         rows={4}
-        maxLength={500}
+        maxLength={BIO_MAX}
         autoComplete="off"
-        hint="500 caractères max. Visible sur ton profil public."
+        hint={`${BIO_MAX} caractères max. Visible sur ton profil public.`}
         defaultValue={state.values?.bio ?? bio}
         error={state.errors?.bio}
       />
@@ -45,7 +46,7 @@ export function ProfileForm({
         name="city"
         label="Ville"
         autoComplete="address-level2"
-        maxLength={100}
+        maxLength={CITY_MAX}
         hint="Visible sur ton profil public."
         defaultValue={state.values?.city ?? city}
         error={state.errors?.city}

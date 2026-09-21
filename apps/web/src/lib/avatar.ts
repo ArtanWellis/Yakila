@@ -1,21 +1,10 @@
-/** Préfixe du chemin public du bucket `avatars` dans Supabase Storage. */
-const AVATAR_PATH_PREFIX = "/storage/v1/object/public/avatars/";
-
 /**
- * N'affiche un avatar que s'il vient du bucket `avatars` de notre projet Supabase. La base impose
- * déjà cette forme (contrainte `check` sur `profiles.avatar_url`) ; ce contrôle est une seconde
- * barrière côté interface, et évite aussi que `next/image` plante sur un hôte non configuré.
+ * N'affiche un avatar que s'il vient du bucket `avatars` de notre projet Supabase (hôte compris :
+ * la base n'impose que la forme du chemin). Implémentation partagée avec le mobile dans
+ * `@yakila/api` ; réexportée ici pour que les appelants du web n'aient rien à changer.
+ * Sert aussi à éviter que `next/image` plante sur un hôte non configuré.
  */
-export function isTrustedAvatarUrl(avatarUrl: string, supabaseUrl: string | undefined): boolean {
-  if (!supabaseUrl) return false;
-  try {
-    const avatar = new URL(avatarUrl);
-    const supabase = new URL(supabaseUrl);
-    return avatar.origin === supabase.origin && avatar.pathname.startsWith(AVATAR_PATH_PREFIX);
-  } catch {
-    return false;
-  }
-}
+export { isTrustedAvatarUrl } from "@yakila/api";
 
 /** Premier caractère d'un mot. Pas `charAt(0)` : il couperait en deux un emoji (paire de substitution). */
 function firstCharacter(word: string): string {

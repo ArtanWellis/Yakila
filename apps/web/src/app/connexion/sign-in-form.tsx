@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { linkClass, primaryButton } from "@/components/button-styles";
 import { FormMessage, TextField } from "@/components/form-fields";
+import { ResendConfirmation } from "@/components/resend-confirmation";
 import { signInAction, type SignInState } from "@/lib/auth/actions";
 
 export function SignInForm({ next, signUpHref }: { next: string; signUpHref: string }) {
@@ -40,6 +41,9 @@ export function SignInForm({ next, signUpHref }: { next: string; signUpHref: str
           {pending ? "Connexion…" : "Me connecter"}
         </button>
       </form>
+
+      {/* Hors du <form> de connexion : un formulaire ne s'imbrique pas dans un autre. */}
+      {state.unconfirmedEmail ? <ResendConfirmation email={state.unconfirmedEmail} /> : null}
 
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
         Pas encore de compte ?{" "}

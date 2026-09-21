@@ -2,13 +2,14 @@ import { useRef, useState } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";
 import { updateOwnProfile } from "@yakila/api";
 import type { Profile } from "@yakila/types";
-import { updateProfileSchema } from "@yakila/validation";
+import { BIO_MAX, CITY_MAX, DISPLAY_NAME_MAX, updateProfileSchema } from "@yakila/validation";
 import { Button } from "@/components/Button";
 import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
 import { spacing } from "@/components/theme";
 import { fieldErrorsFromIssues, type FieldErrors } from "@/lib/form";
 import { supabase } from "@/lib/supabase";
+import { REQUEST_TIMEOUT_MS, withTimeout } from "@/lib/timeout";
 
 const FIELDS = ["displayName", "bio", "city"] as const;
 
@@ -43,7 +44,10 @@ export function ProfileForm({ userId, initial, onSaved }: ProfileFormProps) {
     setMessage(null);
     setSaving(true);
     try {
-      const { data, error } = await updateOwnProfile(supabase, userId, parsed.data);
+      const { data, error } = await withTimeout(
+        updateOwnProfile(supabase, userId, parsed.data),
+        REQUEST_TIMEOUT_MS,
+      );
       if (error || !data) {
         setMessage({
           kind: "error",
@@ -74,6 +78,7 @@ export function ProfileForm({ userId, initial, onSaved }: ProfileFormProps) {
         value={displayName}
         onChangeText={setDisplayName}
         error={fieldErrors.displayName}
+        maxLength={DISPLAY_NAME_MAX}
         autoComplete="name"
         textContentType="name"
         returnKeyType="next"
@@ -86,6 +91,7 @@ export function ProfileForm({ userId, initial, onSaved }: ProfileFormProps) {
         value={bio}
         onChangeText={setBio}
         error={fieldErrors.bio}
+        maxLength={BIO_MAX}
         multiline
       />
       <TextField
@@ -93,6 +99,7 @@ export function ProfileForm({ userId, initial, onSaved }: ProfileFormProps) {
         value={city}
         onChangeText={setCity}
         error={fieldErrors.city}
+        maxLength={CITY_MAX}
         autoComplete="postal-address-locality"
         returnKeyType="done"
         onSubmitEditing={() => void save()}

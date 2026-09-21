@@ -1,27 +1,21 @@
+import { isServiceRoleKey } from "@yakila/api";
+
 /**
  * Variables publiques de Supabase. Lues à l'appel (jamais à l'import) : `next build` doit
  * passer sans variables d'environnement (CI), l'erreur n'arrive qu'au moment d'une requête.
  *
  * Les accès `process.env.NEXT_PUBLIC_…` doivent rester littéraux : Next les remplace à la
  * compilation dans le bundle navigateur, une lecture dynamique (`process.env[name]`) échouerait.
+ * `isServiceRoleKey` (partagé, `@yakila/api`) refuse une clé service role qui serait rendue publique.
  */
 
 /**
- * Détecte une clé qui ne doit jamais atteindre un client : `sb_secret_…` (nouveau format)
- * ou un JWT dont le rôle est `service_role` (ancien format). Même contrôle que `createSupabaseClient`
- * (`@yakila/api`), qui ne l'exporte pas : à mutualiser si le package l'expose un jour.
+ * Options des cookies de session, identiques pour les trois clients (navigateur, serveur, proxy).
+ * `@supabase/ssr` ne pose pas `Secure` par défaut : en production le cookie ne doit voyager qu'en
+ * HTTPS. En développement (http://localhost) on ne l'impose pas : Safari refuse un cookie `Secure` sur http.
+ * `process.env.NODE_ENV` reste littéral : Next le remplace à la compilation dans le bundle navigateur.
  */
-export function isServiceRoleKey(key: string): boolean {
-  if (key.startsWith("sb_secret_")) return true;
-  const payload = key.split(".")[1];
-  if (!payload) return false;
-  try {
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return (JSON.parse(json) as { role?: unknown }).role === "service_role";
-  } catch {
-    return false;
-  }
-}
+export const SESSION_COOKIE_OPTIONS = { secure: process.env.NODE_ENV === "production" };
 
 export function getSupabaseEnv(): { url: string; anonKey: string } {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

@@ -1,11 +1,16 @@
 "use server";
 
 import { isUsernameAvailable } from "@yakila/api";
-import { signInSchema, signUpSchema } from "@yakila/validation";
+import { emailSchema, signInSchema, signUpSchema } from "@yakila/validation";
 import { redirect } from "next/navigation";
 import { fieldErrors, formString, type FormState } from "@/lib/forms";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { signInErrorMessage, signUpFailure } from "./errors";
+import {
+  RESEND_SENT_MESSAGE,
+  resendFailureMessage,
+  signInErrorMessage,
+  signUpFailure,
+} from "./errors";
 import { safeNextPath } from "./redirect";
 
 /**
@@ -21,7 +26,11 @@ export type SignUpState = FormState<(typeof SIGN_UP_FIELDS)[number]> & {
   /** Adresse à laquelle le lien de confirmation vient d'être envoyé (confirmation d'e-mail active). */
   checkEmail?: string;
 };
-export type SignInState = FormState<(typeof SIGN_IN_FIELDS)[number]>;
+export type SignInState = FormState<(typeof SIGN_IN_FIELDS)[number]> & {
+  /** Identifiants corrects mais e-mail non confirmé : le formulaire propose de renvoyer le lien. */
+  unconfirmedEmail?: string;
+};
+export type ResendState = { status?: "sent" | "error"; message?: string };
 
 export async function signUpAction(
   _previous: SignUpState,
@@ -81,10 +90,38 @@ export async function signInAction(
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
     console.error("[auth] connexion refusée :", error.code ?? error.status);
-    return { status: "error", message: signInErrorMessage(error), values };
+    return {
+      status: "error",
+      message: signInErrorMessage(error),
+      values,
+      // GoTrue ne renvoie ce code qu'une fois le mot de passe vérifié : proposer le renvoi ne révèle rien.
+      ...(error.code === "email_not_confirmed" ? { unconfirmedEmail: parsed.data.email } : {}),
+    };
   }
 
   redirect(safeNextPath(formString(formData, "next")));
+}
+
+/**
+ * Renvoie le lien de confirmation d'inscription. Sans session ni identité : n'importe qui peut la
+ * joindre, donc elle ne révèle rien (même réponse que l'adresse ait un compte, ou non, ou soit déjà
+ * confirmée). Le délai de 60 s du bouton n'est que du confort : la vraie limite est celle de Supabase
+ * (`over_email_send_rate_limit`).
+ */
+export async function resendConfirmationAction(
+  _previous: ResendState,
+  formData: FormData,
+): Promise<ResendState> {
+  const email = emailSchema.safeParse(formString(formData, "email"));
+  if (!email.success) return { status: "error", message: "Adresse e-mail invalide." };
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.auth.resend({ type: "signup", email: email.data });
+  if (error) {
+    console.error("[auth] renvoi de confirmation refusé :", error.code ?? error.status);
+    return { status: "error", message: resendFailureMessage(error) };
+  }
+  return { status: "sent", message: RESEND_SENT_MESSAGE };
 }
 
 export async function signOutAction(): Promise<void> {

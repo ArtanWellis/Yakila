@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { primaryButton, linkClass } from "@/components/button-styles";
 import { FormMessage, TextField } from "@/components/form-fields";
+import { ResendConfirmation } from "@/components/resend-confirmation";
 import { signUpAction, type SignUpState } from "@/lib/auth/actions";
 import { useUsernameAvailability, type UsernameAvailability } from "./use-username-availability";
 
@@ -79,7 +80,6 @@ export function SignUpForm({ next, loginHref }: { next: string; loginHref: strin
           autoComplete="new-password"
           required
           minLength={8}
-          maxLength={72}
           hint="8 caractères minimum."
           error={state.errors?.password}
         />
@@ -118,8 +118,9 @@ function CheckEmailNotice({ email, loginHref }: { email: string; loginHref: stri
         Clique dessus pour activer ton compte.
       </p>
       <p className="text-sm text-zinc-600 dark:text-zinc-400">
-        Rien reçu ? Regarde dans tes courriers indésirables, puis réessaie dans quelques minutes.
+        Rien reçu ? Regarde dans tes courriers indésirables, ou demande un nouvel e-mail.
       </p>
+      <ResendConfirmation email={email} cooldownOnMount />
       <Link href={loginHref} className={linkClass}>
         Aller à la connexion
       </Link>

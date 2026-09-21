@@ -4,6 +4,7 @@ import { emailSchema } from "@yakila/validation";
 import { Button } from "@/components/Button";
 import { Screen } from "@/components/Screen";
 import { colors, spacing } from "@/components/theme";
+import { ResendConfirmationEmail } from "@/features/auth/ResendConfirmationEmail";
 
 /** Affiché quand l'inscription n'a pas ouvert de session : la confirmation d'e-mail est active. */
 export default function CheckEmailScreen() {
@@ -26,9 +27,11 @@ export default function CheckEmailScreen() {
         Ouvre le lien qu&apos;il contient pour confirmer ton adresse, puis reviens te connecter.
       </Text>
       <Text style={styles.hint}>
-        Tu ne le vois pas ? Regarde dans tes courriers indésirables, puis réessaie dans quelques
-        minutes.
+        Tu ne le vois pas ? Regarde dans tes courriers indésirables, ou demande un nouvel e-mail
+        ci-dessous.
       </Text>
+      {/* Sans adresse valide (lien profond sans paramètre) on ne sait pas à qui renvoyer. */}
+      {parsedEmail.success && <ResendConfirmationEmail email={parsedEmail.data} startCoolingDown />}
       <Button title="Aller à la connexion" onPress={() => router.replace("/sign-in")} />
     </Screen>
   );

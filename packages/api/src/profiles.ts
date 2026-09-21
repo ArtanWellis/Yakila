@@ -73,6 +73,10 @@ export function isTrustedAvatarUrl(
     const supabase = new URL(supabaseUrl);
     return (
       avatar.origin === supabase.origin &&
+      // La chaîne brute doit aussi commencer par l'origine : `https://x@evil.example@notre-hote/…`
+      // désigne notre hôte pour WHATWG, mais les analyseurs natifs (iOS, Android) peuvent couper
+      // au premier `@` et joindre un autre hôte. Cela écarte aussi les identifiants dans l'URL.
+      avatarUrl.startsWith(`${supabase.origin}/`) &&
       avatar.pathname.startsWith(`/storage/v1/object/public/${AVATAR_BUCKET}/`)
     );
   } catch {

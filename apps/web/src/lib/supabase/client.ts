@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@yakila/types";
-import { getSupabaseEnv } from "./env";
+import { getSupabaseEnv, SESSION_COOKIE_OPTIONS } from "./env";
 
 /**
  * Client Supabase du navigateur (Client Components uniquement). La session est lue et écrite dans
@@ -8,5 +8,5 @@ import { getSupabaseEnv } from "./env";
  */
 export function createBrowserSupabaseClient() {
   const { url, anonKey } = getSupabaseEnv();
-  return createBrowserClient<Database>(url, anonKey);
+  return createBrowserClient<Database>(url, anonKey, { cookieOptions: SESSION_COOKIE_OPTIONS });
 }

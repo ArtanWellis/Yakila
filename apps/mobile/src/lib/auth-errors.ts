@@ -9,12 +9,22 @@ export interface AuthErrorLike {
 const NETWORK_MESSAGE = "Connexion impossible. Vérifie ta connexion internet et réessaie.";
 const RATE_LIMIT_MESSAGE = "Trop de tentatives. Patiente quelques minutes avant de réessayer.";
 
+/** Convertit une valeur attrapée (`catch`) : une `Error` (dont `TimeoutError`) telle quelle, sinon une erreur vide. */
+export function asErrorLike(error: unknown): AuthErrorLike {
+  return error instanceof Error ? error : { message: "" };
+}
+
+/** `TimeoutError` (src/lib/timeout.ts) : l'appel n'a pas répondu dans le délai imparti. */
+function isTimeout(error: AuthErrorLike): boolean {
+  return error.name === "TimeoutError";
+}
+
 /** `AuthRetryableFetchError` : réseau coupé ou passerelle indisponible (502 à 504). */
 function isNetworkError(error: AuthErrorLike): boolean {
   return error.name === "AuthRetryableFetchError";
 }
 
-function isRateLimited(error: AuthErrorLike): boolean {
+export function isRateLimited(error: AuthErrorLike): boolean {
   return (
     error.status === 429 ||
     error.code === "over_request_rate_limit" ||
@@ -22,19 +32,31 @@ function isRateLimited(error: AuthErrorLike): boolean {
   );
 }
 
+/** Connexion refusée parce que l'adresse e-mail n'est pas encore confirmée (mot de passe correct). */
+export function isEmailNotConfirmed(error: AuthErrorLike): boolean {
+  return error.code === "email_not_confirmed";
+}
+
 /**
- * Message de connexion. Volontairement générique pour un mauvais e-mail ou mot de passe : on ne
- * révèle pas si le compte existe. `email_not_confirmed` n'est renvoyé qu'avec le bon mot de passe,
- * il peut donc être précisé sans rien divulguer.
+ * Message de connexion. Volontairement générique pour un mauvais e-mail ou mot de passe, et aussi
+ * pour un compte suspendu (`user_banned`) : on ne révèle pas si le compte existe ni son état, comme
+ * sur le web. `email_not_confirmed` n'est renvoyé qu'avec le bon mot de passe, il peut donc être
+ * précisé sans rien divulguer.
  */
 export function describeSignInError(error: AuthErrorLike): string {
+  if (isTimeout(error)) {
+    return "La connexion met trop de temps. Vérifie ta connexion internet et réessaie.";
+  }
   if (isNetworkError(error)) return NETWORK_MESSAGE;
   if (isRateLimited(error)) return RATE_LIMIT_MESSAGE;
-  if (error.code === "email_not_confirmed") {
+  if (isEmailNotConfirmed(error)) {
     return "Adresse e-mail pas encore confirmée. Ouvre l'e-mail de confirmation que nous t'avons envoyé.";
   }
-  if (error.code === "user_banned") return "Ce compte est suspendu.";
-  if (error.code === "invalid_credentials" || /invalid login credentials/i.test(error.message)) {
+  if (
+    error.code === "invalid_credentials" ||
+    error.code === "user_banned" ||
+    /invalid login credentials/i.test(error.message)
+  ) {
     return "Identifiants incorrects.";
   }
   return "Connexion impossible pour le moment. Réessaie plus tard.";
@@ -56,6 +78,13 @@ export interface SignUpErrorDescription {
  * (par exemple « Error sending confirmation email »), qui n'a rien à voir avec le pseudo.
  */
 export function describeSignUpError(error: AuthErrorLike): SignUpErrorDescription {
+  // Sans réponse, on ne sait pas si le compte a été créé : ne pas laisser croire à un échec.
+  if (isTimeout(error)) {
+    return {
+      message:
+        "L'inscription met trop de temps. Elle a peut-être abouti : vérifie ta boîte mail ou connecte-toi.",
+    };
+  }
   if (isNetworkError(error)) return { message: NETWORK_MESSAGE };
   if (isRateLimited(error)) return { message: RATE_LIMIT_MESSAGE };
   if (/database error saving new user/i.test(error.message)) {
@@ -78,4 +107,19 @@ export function describeSignUpError(error: AuthErrorLike): SignUpErrorDescriptio
   return {
     message: "Inscription impossible avec ces informations. Si tu as déjà un compte, connecte-toi.",
   };
+}
+
+/**
+ * Message d'échec du renvoi de l'e-mail de confirmation. Le succès, lui, a toujours le même texte
+ * (voir `ResendConfirmationEmail`) : GoTrue ne répond pas différemment selon que l'adresse existe ou non.
+ */
+export function describeResendError(error: AuthErrorLike): string {
+  if (isTimeout(error)) {
+    return "La demande met trop de temps. L'e-mail a peut-être été envoyé : regarde ta boîte mail avant de réessayer.";
+  }
+  if (isNetworkError(error)) return NETWORK_MESSAGE;
+  if (isRateLimited(error)) {
+    return "Un e-mail a déjà été envoyé récemment. Patiente une minute avant d'en demander un autre.";
+  }
+  return "Impossible d'envoyer l'e-mail pour le moment. Réessaie plus tard.";
 }

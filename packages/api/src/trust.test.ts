@@ -28,6 +28,24 @@ describe("isTrustedAvatarUrl", () => {
     expect(isTrustedAvatarUrl(userinfo, SUPABASE)).toBe(false);
   });
 
+  it("refuse les identifiants dans l'URL, même quand WHATWG y lit notre hôte", () => {
+    const path = `/storage/v1/object/public/avatars/${UID}/avatar`;
+    // Pour WHATWG l'hôte est bien le nôtre (le dernier `@` sépare les identifiants) ; un analyseur natif
+    // qui coupe au premier `@` joindrait evil.example.
+    const ambiguous = `https://x@evil.example@abcd1234.supabase.co${path}`;
+    const withPassword = `https://user:pass@abcd1234.supabase.co${path}`;
+    expect(new URL(ambiguous).origin).toBe(SUPABASE);
+    expect(isTrustedAvatarUrl(ambiguous, SUPABASE)).toBe(false);
+    expect(isTrustedAvatarUrl(withPassword, SUPABASE)).toBe(false);
+  });
+
+  it("refuse une URL précédée d'espaces ou écrite en majuscules (jamais produite par getPublicUrl)", () => {
+    expect(isTrustedAvatarUrl(` ${OWN}`, SUPABASE)).toBe(false);
+    expect(
+      isTrustedAvatarUrl(OWN.replace("abcd1234.supabase.co", "ABCD1234.SUPABASE.CO"), SUPABASE),
+    ).toBe(false);
+  });
+
   it("refuse http quand le projet est en https", () => {
     expect(isTrustedAvatarUrl(OWN.replace("https:", "http:"), SUPABASE)).toBe(false);
   });

@@ -25,10 +25,12 @@ export function signUpFailure(error: AuthErrorLike): SignUpFailure {
   if (error.message?.includes(GENERIC_DB_ERROR)) {
     return { field: "username", message: USERNAME_TAKEN_MESSAGE };
   }
+  // Message neutre, sans champ désigné : ne pas confirmer qu'un compte existe pour cette adresse
+  // (énumération de comptes). Même formulation que le mobile.
   if (error.code === "user_already_exists" || error.code === "email_exists") {
     return {
-      field: "email",
-      message: "Un compte existe déjà avec cette adresse e-mail. Connecte-toi plutôt.",
+      message:
+        "Inscription impossible avec ces informations. Si tu as déjà un compte, connecte-toi.",
     };
   }
   if (error.code === "email_address_invalid") {
@@ -44,6 +46,20 @@ export function signUpFailure(error: AuthErrorLike): SignUpFailure {
     return { message: "Trop de tentatives. Réessaie dans quelques minutes." };
   }
   return { message: "Inscription impossible pour le moment. Réessaie dans un instant." };
+}
+
+/**
+ * Réponse au renvoi de l'e-mail de confirmation. Succès neutre : GoTrue ne dit pas si l'adresse a un
+ * compte (ni s'il est déjà confirmé), et nous non plus.
+ */
+export const RESEND_SENT_MESSAGE =
+  "Si un compte attend sa confirmation pour cette adresse, un nouvel e-mail vient d'être envoyé.";
+
+export function resendFailureMessage(error: AuthErrorLike): string {
+  if (error.code && RATE_LIMIT_CODES.includes(error.code)) {
+    return "Un e-mail vient d'être envoyé. Attends une minute avant d'en demander un autre.";
+  }
+  return "Envoi impossible pour le moment. Réessaie dans un instant.";
 }
 
 /**

@@ -8,7 +8,7 @@ import { StatusMessage } from "@/components/StatusMessage";
 import { TextField } from "@/components/TextField";
 import { colors, spacing } from "@/components/theme";
 import { checkUsernameAvailable, signUpWithUsername } from "@/features/auth/actions";
-import { describeSignUpError } from "@/lib/auth-errors";
+import { asErrorLike, describeSignUpError } from "@/lib/auth-errors";
 import { fieldErrorsFromIssues, type FieldErrors } from "@/lib/form";
 
 const FIELDS = ["username", "email", "password"] as const;
@@ -56,8 +56,9 @@ export default function SignUpScreen() {
       if (data.session === null) {
         router.replace({ pathname: "/check-email", params: { email: parsed.data.email } });
       }
-    } catch {
-      setFormError(describeSignUpError({ message: "" }).message);
+    } catch (error) {
+      // Dont `TimeoutError` : le message précise que l'inscription a peut-être abouti.
+      setFormError(describeSignUpError(asErrorLike(error)).message);
     } finally {
       setSubmitting(false);
     }
